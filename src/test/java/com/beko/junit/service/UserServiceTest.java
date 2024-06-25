@@ -2,13 +2,19 @@ package com.beko.junit.service;
 
 import org.beko.junit.DTO.User;
 import org.beko.junit.Service.UserService;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.collection.IsEmptyCollection;
+import org.hamcrest.collection.IsMapContaining;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.hamcrest.MatcherAssert.*;
 
 //@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD) //By default
@@ -31,7 +37,10 @@ class UserServiceTest {
         System.out.println("Test 1: " + this);
         userService = new UserService();
         var users = userService.getAll();
-        assertTrue(users.isEmpty());
+
+        //Hamcrest
+        MatcherAssert.assertThat(users, IsEmptyCollection.empty());
+//        assertTrue(users.isEmpty());
     }
 
     @Test
@@ -42,7 +51,10 @@ class UserServiceTest {
         userService.add(MAKO);
 
         var users = userService.getAll();
-        assertEquals(2, users.size());
+
+        //AssertJ
+        assertThat(users).hasSize(2);
+//        assertEquals(2, users.size());
     }
 
     @Test
@@ -50,8 +62,27 @@ class UserServiceTest {
         userService.add(BEKO);
         Optional<User> maybeUser = userService.login(BEKO.getName(), BEKO.getPassword());
 
-        assertTrue(maybeUser.isPresent());
-        maybeUser.ifPresent(user -> assertEquals(BEKO, user));
+        //AssertJ
+        assertThat(maybeUser).isPresent();
+        maybeUser.ifPresent(user -> assertThat(user).isEqualTo(BEKO));
+//        assertTrue(maybeUser.isPresent());
+//        maybeUser.ifPresent(user -> assertEquals(BEKO, user));
+    }
+
+    @Test
+    void usersConvertedToById() {
+        userService.add(BEKO, MAKO);
+
+        Map<Integer, User> users = userService.getAllConvertedById();
+
+        //Hamcrest
+        MatcherAssert.assertThat(users, IsMapContaining.hasKey(BEKO.getId()));
+
+        //AssertJ
+        assertAll(
+                () -> assertThat(users).containsKeys(BEKO.getId(), MAKO.getId()),
+                () -> assertThat(users).containsValues(BEKO, MAKO)
+        );
     }
 
     @Test
