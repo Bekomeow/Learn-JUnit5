@@ -69,6 +69,26 @@ class UserServiceTest {
 //        maybeUser.ifPresent(user -> assertEquals(BEKO, user));
     }
 
+//    (1 variant)
+//    @Test
+//    void throwExceptionIfUsernameOrPasswordIsNull() {
+//        try {
+//            userService.login(null, "dummy");
+//            fail();
+//        } catch (IllegalArgumentException e) {
+//            assertTrue(true);
+//        }
+//    }
+
+//    (2 variant)
+    @Test
+    void throwExceptionIfUsernameOrPasswordIsNull() {
+        assertAll(
+                () -> assertThrows(IllegalArgumentException.class, () -> userService.login(null, "dummy")),
+                () -> assertThrows(IllegalArgumentException.class, () -> userService.login("dummy", null))
+        );
+    }
+
     @Test
     void usersConvertedToById() {
         userService.add(BEKO, MAKO);
