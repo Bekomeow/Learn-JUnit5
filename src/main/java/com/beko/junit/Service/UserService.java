@@ -1,10 +1,8 @@
-package org.beko.junit.Service;
+package com.beko.junit.Service;
 
-import org.beko.junit.DTO.User;
+import com.beko.junit.DTO.User;
 
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;

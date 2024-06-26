@@ -1,4 +1,4 @@
-package org.beko.junit.DTO;
+package com.beko.junit.DTO;
 
 import lombok.Value;
 

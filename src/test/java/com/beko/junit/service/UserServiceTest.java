@@ -1,23 +1,27 @@
 package com.beko.junit.service;
 
-import org.beko.junit.DTO.User;
-import org.beko.junit.Service.UserService;
+import com.beko.junit.DTO.User;
+import com.beko.junit.Service.UserService;
+import com.beko.junit.paramresolver.UserServiceParamResolver;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.collection.IsEmptyCollection;
 import org.hamcrest.collection.IsMapContaining;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.hamcrest.MatcherAssert.*;
-
+@Tag("Fast")
 //@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD) //By default
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@ExtendWith({
+        UserServiceParamResolver.class
+})
 class UserServiceTest {
     private static final User MAKO = User.of(2, "Mako", "456");
     private static final User BEKO = User.of(1, "Beko", "123");
@@ -28,12 +32,14 @@ class UserServiceTest {
         System.out.println("Before all: ");
     }
     @BeforeEach
-    void prepare() {
+    void prepare(UserService userService) {
         System.out.println("Before each: " + this);
-        userService = new UserService();
+        this.userService = userService;
     }
+    @Order(1)
+    @DisplayName("users will be empty if no user added")
     @Test
-    void userEmptyIfNoUserAdded() {
+    void userEmptyIfNoUserAdded(UserService userService) {
         System.out.println("Test 1: " + this);
         userService = new UserService();
         var users = userService.getAll();
@@ -43,6 +49,7 @@ class UserServiceTest {
 //        assertTrue(users.isEmpty());
     }
 
+    @Order(2)
     @Test
     void userSizeIdUserAdded() {
         System.out.println("Test 2: " + this);
@@ -55,38 +62,6 @@ class UserServiceTest {
         //AssertJ
         assertThat(users).hasSize(2);
 //        assertEquals(2, users.size());
-    }
-
-    @Test
-    void loginSuccessesIfUserExists() {
-        userService.add(BEKO);
-        Optional<User> maybeUser = userService.login(BEKO.getName(), BEKO.getPassword());
-
-        //AssertJ
-        assertThat(maybeUser).isPresent();
-        maybeUser.ifPresent(user -> assertThat(user).isEqualTo(BEKO));
-//        assertTrue(maybeUser.isPresent());
-//        maybeUser.ifPresent(user -> assertEquals(BEKO, user));
-    }
-
-//    (1 variant)
-//    @Test
-//    void throwExceptionIfUsernameOrPasswordIsNull() {
-//        try {
-//            userService.login(null, "dummy");
-//            fail();
-//        } catch (IllegalArgumentException e) {
-//            assertTrue(true);
-//        }
-//    }
-
-//    (2 variant)
-    @Test
-    void throwExceptionIfUsernameOrPasswordIsNull() {
-        assertAll(
-                () -> assertThrows(IllegalArgumentException.class, () -> userService.login(null, "dummy")),
-                () -> assertThrows(IllegalArgumentException.class, () -> userService.login("dummy", null))
-        );
     }
 
     @Test
@@ -105,22 +80,6 @@ class UserServiceTest {
         );
     }
 
-    @Test
-    void loginFailIfPasswordNotCorrect() {
-        userService.add(BEKO);
-        var maybeUser = userService.login(BEKO.getName(), "jlk");
-
-        assertTrue(maybeUser.isEmpty());
-    }
-
-    @Test
-    void loginFailIfUserDoesNotExists() {
-        userService.add(BEKO);
-        var maybeUser = userService.login("akldf", MAKO.getPassword());
-
-        assertTrue(maybeUser.isEmpty());
-    }
-
     @AfterEach
     void deleteDataFromDatabase() {
         System.out.println("After each: " + this);
@@ -129,5 +88,62 @@ class UserServiceTest {
     @AfterAll
     static void closeConnectionPull() {
         System.out.println("After all: ");
+    }
+
+    @Nested
+    @DisplayName("test user login functionality")
+    @Tag("Login")
+    class LoginTest {
+//        @Tag("login")
+        @Test
+        void loginSuccessesIfUserExists() {
+            userService.add(BEKO);
+            Optional<User> maybeUser = userService.login(BEKO.getName(), BEKO.getPassword());
+
+            //AssertJ
+            assertThat(maybeUser).isPresent();
+            maybeUser.ifPresent(user -> assertThat(user).isEqualTo(BEKO));
+//        assertTrue(maybeUser.isPresent());
+//        maybeUser.ifPresent(user -> assertEquals(BEKO, user));
+        }
+
+//    (1 variant)
+//    @Test
+//    void throwExceptionIfUsernameOrPasswordIsNull() {
+//        try {
+//            userService.login(null, "dummy");
+//            fail();
+//        } catch (IllegalArgumentException e) {
+//            assertTrue(true);
+//        }
+//    }
+
+        //    (2 variant)
+//        @Tag("login")
+        @Test
+        void throwExceptionIfUsernameOrPasswordIsNull() {
+            assertAll(
+                    () -> assertThrows(IllegalArgumentException.class, () -> userService.login(null, "dummy")),
+                    () -> assertThrows(IllegalArgumentException.class, () -> userService.login("dummy", null))
+            );
+        }
+
+//        @Tag("login")
+        @Test
+        void loginFailIfPasswordNotCorrect() {
+            userService.add(BEKO);
+            var maybeUser = userService.login(BEKO.getName(), "jlk");
+
+            assertTrue(maybeUser.isEmpty());
+        }
+
+//        @Tag("login")
+        @Test
+        void loginFailIfUserDoesNotExists() {
+            userService.add(BEKO);
+            var maybeUser = userService.login("akldf", MAKO.getPassword());
+
+            assertTrue(maybeUser.isEmpty());
+        }
     }
 }
