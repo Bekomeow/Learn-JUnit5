@@ -3,14 +3,18 @@ package com.beko.junit.service;
 import com.beko.junit.DTO.User;
 import com.beko.junit.Service.UserService;
 import com.beko.junit.paramresolver.UserServiceParamResolver;
+import lombok.Value;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.collection.IsEmptyCollection;
 import org.hamcrest.collection.IsMapContaining;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.*;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -145,5 +149,39 @@ class UserServiceTest {
 
             assertTrue(maybeUser.isEmpty());
         }
+
+        @ParameterizedTest(name = "{arguments} test")
+//        @ArgumentsSource()
+//        @NullSource
+//        @EmptySource
+//        @ValueSource(strings = {
+//                "Beko", "Mako"
+//        })
+//        @EnumSource
+//        @CsvFileSource(resources = {"/login-test-data.csv"}, delimiter = ',', numLinesToSkip = 1)
+//        @CsvSource(value = {
+//                "NAME,PASSWORD",
+//                "Beko,123",
+//                "Mako,456"
+//        }, delimiter = ',')
+        @MethodSource("com.beko.junit.service.UserServiceTest#getArgumentsForLoginTest")
+        void loginParameterizedTest(String name, String password, Optional<User> user) {
+            userService.add(BEKO, MAKO);
+
+            var maybeUser = userService.login(name, password);
+
+            System.out.println(maybeUser);
+
+            assertThat(maybeUser).isEqualTo(user);
+        }
+    }
+    static Stream<Arguments> getArgumentsForLoginTest() {
+        return Stream.of(
+                Arguments.of("Beko", "123", Optional.of(BEKO)),
+                Arguments.of("Mako", "456", Optional.of(MAKO)),
+                Arguments.of("dummy", "456", Optional.empty()),
+                Arguments.of("Beko", "dummy", Optional.empty())
+        );
     }
 }
+
