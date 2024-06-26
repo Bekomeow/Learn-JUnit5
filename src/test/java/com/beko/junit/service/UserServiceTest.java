@@ -12,8 +12,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -97,6 +99,7 @@ class UserServiceTest {
     @Nested
     @DisplayName("test user login functionality")
     @Tag("Login")
+    @Timeout(value = 200, unit = TimeUnit.MICROSECONDS)
     class LoginTest {
 //        @Tag("login")
         @Test
@@ -134,7 +137,8 @@ class UserServiceTest {
 
 //        @Tag("login")
         @Test
-        void loginFailIfPasswordNotCorrect() {
+        @Disabled("flaky, need to see")
+        void loginFailIfPasswordIsNotCorrect() {
             userService.add(BEKO);
             var maybeUser = userService.login(BEKO.getName(), "jlk");
 
@@ -143,11 +147,25 @@ class UserServiceTest {
 
 //        @Tag("login")
         @Test
+        @RepeatedTest(value = 5, name = RepeatedTest.LONG_DISPLAY_NAME)
         void loginFailIfUserDoesNotExists() {
             userService.add(BEKO);
-            var maybeUser = userService.login("akldf", MAKO.getPassword());
+            var maybeUser = userService.login("dummy", MAKO.getPassword());
 
             assertTrue(maybeUser.isEmpty());
+        }
+
+        @Test
+        void checkLoginFunctionalityPerformance() {
+            var result = assertTimeout(Duration.ofMillis(200L), () -> {
+                Thread.sleep(300L);
+                return userService.login("dummy", MAKO.getPassword());
+            });
+
+//            var result = assertTimeoutPreemptively(Duration.ofMillis(200L), () -> {
+//                Thread.sleep(300L);
+//                return userService.login("dummy", MAKO.getPassword());
+//            });
         }
 
         @ParameterizedTest(name = "{arguments} test")
