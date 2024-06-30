@@ -1,4 +1,4 @@
-package com.beko.junit.Service;
+package com.beko.junit.service;
 
 import com.beko.junit.DTO.User;
 

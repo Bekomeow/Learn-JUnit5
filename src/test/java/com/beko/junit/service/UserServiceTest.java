@@ -1,9 +1,8 @@
 package com.beko.junit.service;
 
 import com.beko.junit.DTO.User;
-import com.beko.junit.Service.UserService;
-import com.beko.junit.paramresolver.UserServiceParamResolver;
-import lombok.Value;
+import com.beko.junit.TestBase;
+import com.beko.junit.extension.*;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.collection.IsEmptyCollection;
 import org.hamcrest.collection.IsMapContaining;
@@ -12,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -26,9 +26,13 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestInstance(TestInstance.Lifecycle.PER_METHOD) //By default
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @ExtendWith({
-        UserServiceParamResolver.class
+        UserServiceParamResolver.class,
+        PostProcessingExtension.class,
+        ConditionalExecution.class,
+        ThrowableExtension.class,
+//        GlobalExtension.class
 })
-class UserServiceTest {
+class UserServiceTest extends TestBase {
     private static final User MAKO = User.of(2, "Mako", "456");
     private static final User BEKO = User.of(1, "Beko", "123");
     private UserService userService;
@@ -45,7 +49,11 @@ class UserServiceTest {
     @Order(1)
     @DisplayName("users will be empty if no user added")
     @Test
-    void userEmptyIfNoUserAdded(UserService userService) {
+    void userEmptyIfNoUserAdded(UserService userService) throws IOException {
+        if (true) {
+//            throw new IOException();
+            throw new RuntimeException();
+        }
         System.out.println("Test 1: " + this);
         userService = new UserService();
         var users = userService.getAll();

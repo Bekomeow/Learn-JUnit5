@@ -1,6 +1,6 @@
-package com.beko.junit.paramresolver;
+package com.beko.junit.extension;
 
-import com.beko.junit.Service.UserService;
+import com.beko.junit.service.UserService;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
