@@ -1,5 +1,6 @@
 package com.beko.junit.extension;
 
+import com.beko.junit.dao.UserDao;
 import com.beko.junit.service.UserService;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
@@ -15,6 +16,6 @@ public class UserServiceParamResolver implements ParameterResolver {
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         var store = extensionContext.getStore(ExtensionContext.Namespace.create(extensionContext.getTestMethod()));
-        return store.getOrComputeIfAbsent(extensionContext.getTestMethod(), it -> new UserService());
+        return store.getOrComputeIfAbsent(extensionContext.getTestMethod(), it -> new UserService(new UserDao()));
     }
 }

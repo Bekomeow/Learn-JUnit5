@@ -1,6 +1,7 @@
 package com.beko.junit.service;
 
 import com.beko.junit.DTO.User;
+import com.beko.junit.dao.UserDao;
 
 import java.util.*;
 
@@ -9,6 +10,16 @@ import static java.util.stream.Collectors.toMap;
 
 public class UserService {
     private final List<User> users = new ArrayList<>();
+    private final UserDao userDao;
+
+    public UserService(UserDao userDao) {
+        this.userDao = userDao;
+    }
+
+    public boolean delete(Integer userId) {
+        return userDao.delete(userId);
+    }
+
     public List<User> getAll() {
         return users;
     }

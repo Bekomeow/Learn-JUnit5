@@ -1,5 +1,6 @@
 package com.beko.junit.extension;
 
+import com.beko.junit.dao.UserDao;
 import com.beko.junit.service.UserService;
 import lombok.Getter;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -14,7 +15,7 @@ public class PostProcessingExtension implements TestInstancePostProcessor {
         var declaredFields = testInstance.getClass().getDeclaredFields();
         for (Field declaredField : declaredFields) {
             if (declaredField.isAnnotationPresent(Getter.class)) {
-                declaredField.set(testInstance, new UserService());
+                declaredField.set(testInstance, new UserService(new UserDao()));
             }
         }
     }

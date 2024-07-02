@@ -2,6 +2,7 @@ package com.beko.junit.service;
 
 import com.beko.junit.DTO.User;
 import com.beko.junit.TestBase;
+import com.beko.junit.dao.UserDao;
 import com.beko.junit.extension.*;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.collection.IsEmptyCollection;
@@ -10,6 +11,8 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -29,22 +32,42 @@ import static org.junit.jupiter.api.Assertions.*;
         UserServiceParamResolver.class,
         PostProcessingExtension.class,
         ConditionalExecution.class,
-        ThrowableExtension.class,
+//        ThrowableExtension.class,
 //        GlobalExtension.class
 })
 class UserServiceTest extends TestBase {
     private static final User MAKO = User.of(2, "Mako", "456");
     private static final User BEKO = User.of(1, "Beko", "123");
-    private UserService userService;
+    private UserDao userDao;
 
     @BeforeAll
     static void init() {
         System.out.println("Before all: ");
     }
+    private UserService userService;
     @BeforeEach
-    void prepare(UserService userService) {
+    void prepare() {
         System.out.println("Before each: " + this);
-        this.userService = userService;
+        this.userDao = Mockito.mock(UserDao.class);
+        this.userService = new UserService(userDao);
+    }
+
+    @Test
+    public void shouldDeleteExistedUser() {
+        userService.add(BEKO);
+        Mockito.doReturn(true).when(userDao).delete(BEKO.getId());
+//        Mockito.doReturn(true).when(userDao).delete(Mockito.any());
+
+        Mockito.when(userDao.delete(BEKO.getId()))
+                .thenReturn(true)
+                .thenReturn(false);
+
+        var deleteResult = userService.delete(BEKO.getId());
+
+        System.out.println(userService.delete(BEKO.getId()));
+        System.out.println(userService.delete(BEKO.getId()));
+
+        assertThat(deleteResult).isTrue();
     }
     @Order(1)
     @DisplayName("users will be empty if no user added")
@@ -55,7 +78,7 @@ class UserServiceTest extends TestBase {
             throw new RuntimeException();
         }
         System.out.println("Test 1: " + this);
-        userService = new UserService();
+        userService = new UserService(new UserDao());
         var users = userService.getAll();
 
         //Hamcrest
@@ -67,7 +90,7 @@ class UserServiceTest extends TestBase {
     @Test
     void userSizeIdUserAdded() {
         System.out.println("Test 2: " + this);
-        userService = new UserService();
+        userService = new UserService(new UserDao());
         userService.add(BEKO);
         userService.add(MAKO);
 
