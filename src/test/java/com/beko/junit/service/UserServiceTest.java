@@ -11,8 +11,9 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
+import org.mockito.internal.util.MockUtil;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -23,6 +24,7 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @Tag("Fast")
 //@TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -32,43 +34,69 @@ import static org.junit.jupiter.api.Assertions.*;
         UserServiceParamResolver.class,
         PostProcessingExtension.class,
         ConditionalExecution.class,
+        MockitoExtension.class,
 //        ThrowableExtension.class,
 //        GlobalExtension.class
 })
 class UserServiceTest extends TestBase {
     private static final User MAKO = User.of(2, "Mako", "456");
     private static final User BEKO = User.of(1, "Beko", "123");
+    @Captor
+    private ArgumentCaptor<Integer> argumentCaptor;
+//    @Mock(lenient = true)
+    @Mock()
     private UserDao userDao;
+    @InjectMocks
+    private UserService userService;
 
     @BeforeAll
     static void init() {
         System.out.println("Before all: ");
     }
-    private UserService userService;
+
     @BeforeEach
     void prepare() {
         System.out.println("Before each: " + this);
-        this.userDao = Mockito.mock(UserDao.class);
-        this.userService = new UserService(userDao);
+//        Mockito.lenient().when(userDao.delete(BEKO.getId())).thenReturn(true);
+        doReturn(true).when(userDao).delete(BEKO.getId());
+
+//        this.userDao = Mockito.mock(UserDao.class);
+//        this.userDao = Mockito.spy(UserDao.class);
+//        this.userService = new UserService(userDao);
+    }
+
+    @Test
+    public void throwExceptionIfDatabaseNotAvailable() {
+        Mockito.doThrow(RuntimeException.class).when(userDao).delete(BEKO.getId());
+
+        assertThrows(RuntimeException.class, () -> userService.delete(BEKO.getId()));
     }
 
     @Test
     public void shouldDeleteExistedUser() {
         userService.add(BEKO);
-        Mockito.doReturn(true).when(userDao).delete(BEKO.getId());
+//        Mockito.doReturn(true).when(userDao).delete(BEKO.getId());
 //        Mockito.doReturn(true).when(userDao).delete(Mockito.any());
 
-        Mockito.when(userDao.delete(BEKO.getId()))
-                .thenReturn(true)
-                .thenReturn(false);
+//        Mockito.when(userDao.delete(BEKO.getId()))
+//                .thenReturn(true)
+//                .thenReturn(false);
 
         var deleteResult = userService.delete(BEKO.getId());
+        System.out.println(userService.delete(BEKO.getId()));
+        System.out.println(userService.delete(BEKO.getId()));
 
-        System.out.println(userService.delete(BEKO.getId()));
-        System.out.println(userService.delete(BEKO.getId()));
+        verify(userDao, Mockito.atLeast(3)).delete(BEKO.getId());
+        verify(userDao, Mockito.times(3)).delete(BEKO.getId());
+
+//        var argumentCaptor = ArgumentCaptor.forClass(Integer.class);
+        Mockito.verify(userDao, Mockito.times(3)).delete(argumentCaptor.capture());
+
+//        Mockito.reset();
 
         assertThat(deleteResult).isTrue();
     }
+
     @Order(1)
     @DisplayName("users will be empty if no user added")
     @Test
